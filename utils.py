@@ -10,4 +10,4 @@ def calculate_average(numbers):
 def get_user_name(user):
     if not user or not user.get("name"):
         return ""
-    return user["name"].upper()
+    return str(user["name"]).upper()
