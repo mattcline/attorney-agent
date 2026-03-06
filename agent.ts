@@ -1,7 +1,7 @@
 import { query } from "@anthropic-ai/claude-agent-sdk";
 
-// Allow running inside a Claude Code session (e.g. during development)
-delete process.env.CLAUDECODE;
+// Uncomment when running from inside a Claude Code session:
+// delete process.env.CLAUDECODE;
 
 // Agentic loop: streams messages as Claude works
 for await (const message of query({
