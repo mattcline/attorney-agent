@@ -36,7 +36,22 @@ There's no chunking, summarization, or context window awareness. The agent fetch
 
 ---
 
-## 5. Multi-Format Support
+## 5. RAG for Large Documents and Precedent Matching
+
+Section 4 covers chunking and summarization for single large documents — the minimum needed to not blow the context window. RAG goes further: embed those chunks, store them in a vector database, and retrieve only the relevant pieces at query time. This also unlocks cross-document analysis, which is where the real legal value is.
+
+**When RAG matters vs. current approach.** For a 5-page NDA, the current single-pass approach is fine — the whole document fits in context and the model sees everything. RAG becomes necessary in two scenarios: (1) the document is too large to fit in context even after chunking (100-page M&A agreements, CC&Rs, inspection reports), and (2) you want to compare the current document against a library of past contracts ("is this indemnification clause stronger or weaker than what we usually accept?").
+
+**What this looks like:**
+
+- **Legal-aware chunking.** Split by section, clause, and sub-clause boundaries — not fixed token counts. A termination clause split across two chunks loses its meaning. Use document structure (headings, numbered sections) as primary split points, with sentence boundaries as fallback for unstructured text.
+- **Per-document vector store.** For a single large document, embed each chunk and retrieve the top-k chunks relevant to each checklist item. The agent reviews a focused window of relevant clauses rather than the full document. This extends the chunking strategy in #4 with semantic retrieval instead of sequential processing.
+- **Clause library for precedent matching.** Embed clauses from past reviewed contracts, tagged by type (indemnification, termination, IP assignment, liability cap). When reviewing a new contract, retrieve similar clauses from the library and surface differences: "This liability cap is $50K; your last three vendor agreements had $500K caps." This is the cross-document pattern tracking that was previously deprioritized — RAG makes it practical without requiring the agent to hold multiple documents in memory.
+- **Hybrid retrieval (BM25 + vector).** Legal text depends on exact terminology — "best efforts" vs. "reasonable efforts" vs. "commercially reasonable efforts" have materially different legal meanings. Pure semantic search might treat these as equivalent. Combine BM25 (exact keyword matching) with vector similarity to catch both semantic relevance and terminological precision.
+
+---
+
+## 6. Multi-Format Support
 
 Legal work runs on Word docs and PDFs, not just Google Docs. Supporting `.docx` and `.pdf` input would dramatically expand where this tool is useful.
 
@@ -44,7 +59,7 @@ Legal work runs on Word docs and PDFs, not just Google Docs. Supporting `.docx` 
 
 ---
 
-## 6. Structured Edit Plans (Not Free-Form Agent Loops)
+## 7. Structured Edit Plans (Not Free-Form Agent Loops)
 
 The editing phase currently gives the agent a list of approved changes and lets it figure out the `gws` commands on its own, one at a time, across up to 30 turns. This is slow, non-deterministic, and occasionally produces malformed commands. Since the approved changes already contain structured `currentText`/`proposedChange` data, the edits could be applied programmatically — no agent loop needed for straightforward replacements.
 
@@ -53,7 +68,5 @@ The editing phase currently gives the agent a list of approved changes and lets 
 ---
 
 ## What I'd Deprioritize
-
-**Cross-document memory / pattern tracking.** Each document review is independent. Tracking patterns across a client's agreements sounds useful in theory, but the complexity isn't justified until the core review loop is rock-solid. Build this later, if ever.
 
 **Agreement type auto-detection.** The user picks the agreement type today. Auto-detection is a nice-to-have, but wrong detection would apply the wrong checklist, which is worse than asking.
