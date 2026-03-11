@@ -67,6 +67,23 @@ The editing phase currently gives the agent a list of approved changes and lets 
 
 ---
 
+## 8. Conversation History Storage
+
+Sessions are ephemeral — there's no record of what the agent analyzed, what messages were exchanged, or what tool calls were made during a review. When an edit fails or a finding looks wrong, there's no way to go back and see the agent's reasoning. No audit trail, no debugging, no way to learn from past runs.
+
+**What this looks like:** Capture all messages from both `query()` calls (analysis and edit phases), including assistant responses, tool use, and structured outputs. Store each session alongside metadata: document ID, agreement type, timestamp, findings count, and approval decisions.
+
+Use a lightweight local storage approach — SQLite or JSON files in a `.attorney-agent/` directory. No database server needed. Each session gets a record keyed by document ID and timestamp, with the full message transcript and metadata queryable independently.
+
+Enable retrieving past session transcripts by document ID or date range. This is useful for:
+
+- **Debugging failed edits** — see the exact agent reasoning and tool calls that led to a bad `ReplaceAllText` match
+- **Audit trail** — know what was reviewed, when, and what changes were approved or skipped
+- **Prompt improvement** — review how the agent handled edge cases across real documents to inform prompt changes
+- **Eval support** — feeds directly into the benchmarking work in #1; you can't score agent behavior you didn't record
+
+---
+
 ## What I'd Deprioritize
 
 **Agreement type auto-detection.** The user picks the agreement type today. Auto-detection is a nice-to-have, but wrong detection would apply the wrong checklist, which is worse than asking.
