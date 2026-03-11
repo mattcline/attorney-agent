@@ -84,6 +84,28 @@ Enable retrieving past session transcripts by document ID or date range. This is
 
 ---
 
+## Misc. Improvements
+
+Lower priority, but worth tracking.
+
+**Party/role awareness.** The agent doesn't know which side the user represents. "Unfavorable term" is meaningless without knowing if you're the vendor or the customer, the landlord or the tenant. A broad indemnification clause is great for the indemnified party and terrible for the indemnifying party. A simple `--role` flag that contextualizes every finding would make analysis significantly more useful.
+
+**Jurisdiction awareness.** Non-compete enforceability varies wildly by state. Governing law clauses have different implications in Delaware vs. California vs. New York. The checklists are jurisdiction-agnostic right now — the agent can flag something as "unfavorable" that's actually unenforceable, or miss something that's required in a specific jurisdiction.
+
+**Redline/track changes output.** Lawyers live in redlines. Right now the agent applies edits directly to the Google Doc with no markup. Generating a suggestion-mode or tracked-changes version — so opposing counsel sees *what* changed — matches the actual legal workflow. Google Docs supports suggestion mode via the API.
+
+**Custom/configurable checklists.** The 7 agreement types are hardcoded. Every law firm has its own playbook — standard positions on liability caps, preferred indemnification language, deal-size thresholds. Users should be able to supply a custom checklist (YAML/JSON file or a `--checklist` flag) or extend the built-in ones.
+
+**Conflicting edit detection.** If finding F003 proposes replacing text that overlaps with F007's proposed replacement, applying both will corrupt the document. There's no overlap detection — edits are applied sequentially and the second one may silently fail or produce garbled output.
+
+**Export/reporting.** No way to share findings outside the CLI. Attorneys need to send review summaries to clients, attach them to deal files, or forward to co-counsel. A `--output memo` flag that generates a formatted summary of findings and recommendations would be high-value.
+
+**Cost visibility.** Analysis uses Opus, editing uses Sonnet — both can get expensive on long documents. There's no token counting or cost estimate shown to the user. Even a rough "this review used ~X tokens ($Y)" at the end would help with budgeting and catching runaway sessions.
+
+**Undo/rollback.** Once edits are applied, the only recovery is Google Docs version history (which most users don't think to check). The agent could snapshot the document before editing and offer a rollback command, or at minimum print a link to the version history.
+
+---
+
 ## What I'd Deprioritize
 
 **Agreement type auto-detection.** The user picks the agreement type today. Auto-detection is a nice-to-have, but wrong detection would apply the wrong checklist, which is worse than asking.
